@@ -9,7 +9,7 @@ pub struct Keccak {
 impl Keccak {
     pub fn new(hash_size: uint) -> Keccak {
 
-        let sponge = match hash_size {
+        let mut sponge = match hash_size {
             0 => SpongeState::new(1024, 576),
             224 => SpongeState::new(1152, 448),
             256 => SpongeState::new(1088, 512),
@@ -17,6 +17,8 @@ impl Keccak {
             512 => SpongeState::new(576, 1024),
             _ => fail!("hash_size must be 0, 224, 256, 384, or 512")
         };
+
+        sponge.fixed_out_len = hash_size;
 
         Keccak {
             hash_size: hash_size,
@@ -37,6 +39,7 @@ impl Digest for Keccak {
             err = self.sponge_state.absorb(input, data_bit_len - (data_bit_len % 8));
             if err == Success {
                 let last_byte = input[data_bit_len/8] >> (8 - (data_bit_len % 8));
+                debug!("Got to second absorb");
                 self.sponge_state.absorb(&[last_byte], data_bit_len % 8);
             } else {
                 fail!(err.to_str());

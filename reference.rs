@@ -101,9 +101,12 @@ pub fn permute_after_xor(state: &mut[u8], data: &[u8], data_len_bytes: uint) {
 
 pub fn permute(state: &mut[u8]) {
     use std::cast::transmute;
-    debug!(fmt!("Permutation input: %?",state));
 
-    unsafe { permute_on_words(transmute(state)); }
+    unsafe {
+        debug!(fmt!("Input of permutation: %?",state));
+        permute_on_words(transmute::<&mut [u8], &mut [u64]> (state));
+        debug!(fmt!("State after permutation: %?", state.as_slice()));
+    }
 }
 
 pub fn new_state() -> ~[u8] {

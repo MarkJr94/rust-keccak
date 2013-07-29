@@ -123,9 +123,9 @@ impl SpongeState {
                             for range(0, whole_blocks) |_| {
                                 do buf_as_slice(cur_data, n/8) |buf| {
                                     debug!(fmt!("Block to be absorbed: %?", buf));
-                                    reference::absorb(self.state, buf, n / 64);
+                                    reference::absorb(self.state, buf, self.rate / 64);
                                 }
-                                cur_data = cur_data + n/8;
+                                cur_data = cur_data + self.rate/8;
                             }
                         }
                     }
@@ -190,7 +190,7 @@ impl SpongeState {
             self.bits_for_squeezing = self.rate;
         }
 
-        debug!(fmt!("Block available for squeezing: %?", self.data_queue.slice_to(self.bits_for_squeezing)));
+        debug!(fmt!("Block available for squeezing: %?", self.data_queue.slice_to(self.bits_for_squeezing / 8)));
         self.squeezing = true;
     }
 
