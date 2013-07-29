@@ -89,11 +89,11 @@ priv fn permute_on_words(state: &mut[u64]) {
     }
 }
 
-pub fn permute_after_xor(state: &mut[u8], data: &[u8]) {
+pub fn permute_after_xor(state: &mut[u8], data: &[u8], data_len_bytes: uint) {
     use std::iterator::*;
 
-    for data.iter().zip(state.mut_iter()).advance |(data_elem, state_elem)| {
-        *state_elem ^= *data_elem;
+    for range(0, data_len_bytes) |i| {
+        state[i] ^= data[i];
     }
 
     permute(state)
@@ -111,33 +111,41 @@ pub fn new_state() -> ~[u8] {
 }
 
 pub fn absorb_576_bits(state: &mut[u8], data: &[u8]) {
-    permute_after_xor(state, data.slice_to(72));
+    permute_after_xor(state, data, 72);
 }
 
 pub fn absorb_832_bits(state: &mut[u8], data: &[u8]) {
-    permute_after_xor(state, data.slice_to(104));
+    permute_after_xor(state, data, 104);
 }
 
 pub fn absorb_1024_bits(state: &mut[u8], data: &[u8]) {
-    permute_after_xor(state, data.slice_to(128));
+    permute_after_xor(state, data, 128);
 }
 
 pub fn absorb_1088_bits(state: &mut[u8], data: &[u8]) {
-    permute_after_xor(state, data.slice_to(136));
+    permute_after_xor(state, data, 136);
 }
 
 pub fn absorb_1152_bits(state: &mut[u8], data: &[u8]) {
-    permute_after_xor(state, data.slice_to(144));
+    permute_after_xor(state, data, 144);
 }
 
 pub fn absorb_1344_bits(state: &mut[u8], data: &[u8]) {
-    permute_after_xor(state, data.slice_to(168));
+    permute_after_xor(state, data, 168);
 }
 
 pub fn absorb(state: &mut[u8], data: &[u8], lane_count: uint) {
-    permute_after_xor(state, data.slice_to(lane_count * 8));
+    permute_after_xor(state, data, lane_count * 8);
 }
 
-pub fn extract_1024_bits(state: &[u8]) -> ~[u8] {
-    state.slice_to(128).to_owned()
+pub fn extract_1024_bits(state: &[u8], data: &mut[u8]) {
+    use std::vec::raw::copy_memory;
+
+    unsafe { copy_memory(data, state, 128); }
+}
+
+pub fn extract(state: &[u8], data: &mut[u8], lane_count: uint) {
+    use std::vec::raw::copy_memory;
+
+    unsafe { copy_memory(data, state, lane_count * 8); }
 }
