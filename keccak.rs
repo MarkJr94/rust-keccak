@@ -18,12 +18,19 @@ fn main() {
 
     let sizes = [224u, 256, 384, 512];
 
-    let in_str = match io::file_reader(&PosixPath("lol")) {
-        Ok(r) => r.read_whole_stream(),
-        Err(msg) => fail!(msg)
-    };
+//     let in_str = match io::file_reader(&PosixPath("lol")) {
+//         Ok(r) => r.read_whole_stream(),
+//         Err(msg) => fail!(msg)
+//     };
 
-    for sizes.iter().advance |&n| {
+    let in_str = [0x0u8, ..400];
+    let mut len = 0;
+    "00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 "
+    .word_iter().advance(|_| {len += 1; true});
+
+    printfln!("len = %u", len);
+
+    for sizes.iter().take_(1).advance |&n| {
         let mut hasher = Keccak::new(n);
 
         debug!(fmt!("Input bytes = %?", in_str));
@@ -35,5 +42,7 @@ fn main() {
             printf!("%x", b as uint);
         }
         println("");
+
+        return;
     }
 }

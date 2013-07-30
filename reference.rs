@@ -56,7 +56,7 @@ priv fn pi(A: &mut [u64]) {
 
     for range(0, 5) |x| {
         for range(0, 5) |y| {
-            A[index!(y, 2 * x + 3 * y)] = tempA[index!(x, y)];
+            A[index!(0 * x + 1 * y, 2 * x + 3 * y)] = tempA[index!(x, y)];
         }
     }
 }
@@ -81,11 +81,71 @@ priv fn iota(A: &mut [u64], index_round: uint) {
 
 priv fn permute_on_words(state: &mut[u64]) {
     for range(0, ROUND_N) |i| {
+
+        println(fmt!("Input of permutation: ["));
+        for range(0,5) |x| {
+            for range(0, 5) |y| {
+                print(fmt!("%016X ", state[index!(x,y)] as uint));
+            }
+            println("")
+        }
+        println(fmt!("]"));
+
         theta(state);
+
+        println(fmt!("After Theta: ["));
+        for range(0,5) |x| {
+            for range(0, 5) |y| {
+                print(fmt!("%016X ", state[index!(x,y)] as uint));
+            }
+            println("");
+        }
+        println(fmt!("]"));
+
         rho(state);
+
+        println(fmt!("After Rho: ["));
+        for range(0,5) |x| {
+            for range(0, 5) |y| {
+                print(fmt!("%016X ", state[index!(x,y)] as uint));
+            }
+            println("");
+        }
+        println(fmt!("]"));
+
         pi(state);
+
+        println(fmt!("After Pi: ["));
+        for range(0,5) |x| {
+            for range(0, 5) |y| {
+                print(fmt!("%016X ", state[index!(x,y)] as uint));
+            }
+            println("");
+        }
+        println(fmt!("]"));
+
         chi(state);
-        iota(state,i)
+
+        println(fmt!("After Chi: ["));
+        for range(0,5) |x| {
+            for range(0, 5) |y| {
+                print(fmt!("%016X ", state[index!(x,y)] as uint));
+            }
+            println("");
+        }
+        println(fmt!("]"));
+
+        iota(state,i);
+
+        println(fmt!("Output of permutation after iota: ["));
+        for range(0,5) |x| {
+            for range(0, 5) |y| {
+                print(fmt!("%016X ", state[index!(x,y)] as uint));
+            }
+            println("");
+        }
+        println(fmt!("]"));
+
     }
 }
 
@@ -103,9 +163,9 @@ pub fn permute(state: &mut[u8]) {
     use std::cast::transmute;
 
     unsafe {
-        debug!(fmt!("Input of permutation: %?",state));
-        permute_on_words(transmute::<&mut [u8], &mut [u64]> (state));
-        debug!(fmt!("State after permutation: %?", state.as_slice()));
+        let fixed = transmute::<&mut [u8], &mut [u64]> (state);
+
+        permute_on_words(fixed);
     }
 }
 
