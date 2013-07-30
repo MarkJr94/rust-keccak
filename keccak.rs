@@ -12,19 +12,28 @@ pub mod sponge;
 fn main() {
     use extra::digest::*;
     use nist::*;
+    use std::io;
+    use std::path::PosixPath;
+    use std::vec;
 
     let sizes = [224u, 256, 384, 512];
 
-    let in_str = "The quick brown fox jumps over the lazy dog";
+    let in_str = match io::file_reader(&PosixPath("lol")) {
+        Ok(r) => r.read_whole_stream(),
+        Err(msg) => fail!(msg)
+    };
 
     for sizes.iter().advance |&n| {
         let mut hasher = Keccak::new(n);
 
-        debug!(fmt!("Input bytes = %?", in_str.as_bytes()));
+        debug!(fmt!("Input bytes = %?", in_str));
         printfln!("Testing size %u:", n)
-        hasher.input_str(in_str);
-        let res = hasher.result_str();
-
-        println(res);
+        hasher.input(in_str);
+        let mut res = vec::from_elem(n / 8, 0u8);
+        hasher.result(res);
+        for res.iter().advance |&b| {
+            printf!("%x", b as uint);
+        }
+        println("");
     }
 }

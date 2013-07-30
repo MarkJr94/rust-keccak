@@ -166,16 +166,20 @@ impl SpongeState {
     }
 
     priv fn pad_and_switch_to_squeeze(&mut self) {
+        debug!(fmt!("Bits in queue: %u %?",self.bits_in_queue, self.data_queue));
         if self.bits_in_queue + 1 == self.rate {
             self.data_queue[self.bits_in_queue/8] |= 1 << (self.bits_in_queue % 8);
             self.absorb_queue();
             self.data_queue.mut_iter().take_(self.rate/8).advance(|n| {*n = 0; true});
         } else {
-            self.data_queue.mut_slice((self.bits_in_queue + 7)/8,
-                self.rate/8 - (self.bits_in_queue + 7)/8 ).mut_iter().advance(|n| {*n = 0; true});
+            debug!(fmt!("(self.bits_in_queue + 7)/8: %u | self.rate/8 - (self.bits_in_queue + 7)/8: %u ",
+                (self.bits_in_queue + 7)/8, self.rate/8 - (self.bits_in_queue + 7)/8 ));
+            self.data_queue.mut_slice_from((self.bits_in_queue + 7)/8).mut_iter()
+                .take_(self.rate/8 - (self.bits_in_queue + 7)/8 )
+                .advance(|n| {*n = 0; true});
             self.data_queue[self.bits_in_queue/8] |= 1 << (self.bits_in_queue % 8);
         }
-        self.data_queue[(self.rate-1)/8] |= 1 << ((self.rate-1) % 8);
+        self.data_queue[(self.rate-1)/8] |= 1 << ((self.rate-1) % 8) - 7;
         self.absorb_queue();
 
         debug!("--- Switching to squeezing phase ---");
@@ -240,6 +244,7 @@ impl SpongeState {
     }
 
     priv fn absorb_queue(&mut self) {
+        debug!("Absorbing Queue");
         debug!(fmt!("Block to be absorbed: %?", self.data_queue.slice_to(self.rate/8)));
         match self.rate {
             576 => reference::absorb_576_bits(self.state, self.data_queue),
