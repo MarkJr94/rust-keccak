@@ -179,7 +179,7 @@ impl SpongeState {
                 .advance(|n| {*n = 0; true});
             self.data_queue[self.bits_in_queue/8] |= 1 << (self.bits_in_queue % 8);
         }
-        self.data_queue[(self.rate-1)/8] |= 1 << ((self.rate-1) % 8) - 7;
+        self.data_queue[(self.rate-1)/8] |= 1 << ((self.rate-1) % 8);
         self.absorb_queue();
 
         debug!("--- Switching to squeezing phase ---");
