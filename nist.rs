@@ -76,16 +76,58 @@ mod test {
     #[test]
     fn test_hashing() {
         use extra::digest::*;
+        use std::io;
+        use std::path::PosixPath;
+        use std::u8;
+        use std::uint;
+        use std::vec;
+        use std::str;
 
-        let sizes = [224, 256, 384, 512];
+        let sizes = [224u, 256, 384, 512];
+        let mut len: uint = 0;
+        let mut msg: ~[u8] = ~[];
+        let mut md_ref: ~[u8] = ~[];
 
-        for sizes.iter().advance |n| {
-            let mut hasher = Keccak::new(224);
+        for sizes.iter().advance |&size| {
+            let fname = fmt!("ShortMsgKAT_%u.txt", size);
+            let r = match io::file_reader(&PosixPath(fname)) {
+                Ok(reader) => reader,
+                Err(msg) => fail!(msg)
+            };
 
-            hasher.input_str("The quick brown fox jumps over the lazy dog");
-            let res = hasher.result_str();
+            for r.each_line |line| {
+                let fixed = line.trim();
 
-            println(res);
+                if line.starts_with("Len") {
+                    let s = line.split_iter(' ').collect::<~[&str]>()[2];
+                    println(s);
+                    len = uint::from_str(s).get();
+                } else if line.starts_with("Msg") {
+                    msg = line.split_iter(' ').collect::<~[&str]>()[2].iter()
+                        .transform(|c| {
+                            let s = str::from_char(c);
+                            println(s);
+                            u8::from_str_radix(s, 16).get()
+                        })
+                        .collect();
+                } else if line.starts_with("MD") {
+                    md_ref = line.split_iter(' ').collect::<~[&str]>()[2].iter()
+                        .transform(|c| {
+                            let s = str::from_char(c);
+                            println(s);
+                            u8::from_str_radix(s, 16).get()
+                        })
+                        .collect();
+
+                    let mut kc = Keccak::new(size);
+                    let mut res = vec::from_elem(size, 0u8);
+
+                    kc.input(msg);
+                    kc.result(res);
+
+                    assert!(md_ref == res, fmt!("Error: Reference %? does not match result %?", md_ref, res));
+                }
+            }
         }
     }
 }

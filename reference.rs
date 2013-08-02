@@ -79,79 +79,41 @@ priv fn iota(A: &mut [u64], index_round: uint) {
     A[index!(0, 0)] ^= ROUND_CONST[index_round] as u64;
 }
 
-priv fn permute_on_words(state: &mut[u64]) {
-    for range(0, ROUND_N) |i| {
-
-        println(fmt!("Input of permutation: ["));
-        for range(0,5) |x| {
-            for range(0, 5) |y| {
-                print(fmt!("%016X ", state[index!(x,y)] as uint));
-            }
+priv fn dump(state: &mut[u64], msg: &str) {
+    printfln!("%s: [",msg);
+    for range(0,25) |x| {
+        printf!("%016X ", state[x] as uint);
+        if x % 5 == 4 {
             println("")
         }
-        println(fmt!("]"));
+    }
+    println("]");
+}
+
+priv fn permute_on_words(state: &mut[u64]) {
+
+    for range(0, ROUND_N) |i| {
+        printfln!("--- Round %u ---", i);
 
         theta(state);
-
-        println(fmt!("After Theta: ["));
-        for range(0,5) |x| {
-            for range(0, 5) |y| {
-                print(fmt!("%016X ", state[index!(x,y)] as uint));
-            }
-            println("");
-        }
-        println(fmt!("]"));
+        dump(state, "After Theta");
 
         rho(state);
-
-        println(fmt!("After Rho: ["));
-        for range(0,5) |x| {
-            for range(0, 5) |y| {
-                print(fmt!("%016X ", state[index!(x,y)] as uint));
-            }
-            println("");
-        }
-        println(fmt!("]"));
+        dump(state, "After Rho");
 
         pi(state);
-
-        println(fmt!("After Pi: ["));
-        for range(0,5) |x| {
-            for range(0, 5) |y| {
-                print(fmt!("%016X ", state[index!(x,y)] as uint));
-            }
-            println("");
-        }
-        println(fmt!("]"));
+        dump(state, "After Pi");
 
         chi(state);
-
-        println(fmt!("After Chi: ["));
-        for range(0,5) |x| {
-            for range(0, 5) |y| {
-                print(fmt!("%016X ", state[index!(x,y)] as uint));
-            }
-            println("");
-        }
-        println(fmt!("]"));
+        dump(state, "After Chi");
 
         iota(state,i);
-
-        println(fmt!("Output of permutation after iota: ["));
-        for range(0,5) |x| {
-            for range(0, 5) |y| {
-                print(fmt!("%016X ", state[index!(x,y)] as uint));
-            }
-            println("");
-        }
-        println(fmt!("]"));
+        dump(state, "Output After Iota");
 
     }
 }
 
 pub fn permute_after_xor(state: &mut[u8], data: &[u8], data_len_bytes: uint) {
-    use std::iterator::*;
-
     for range(0, data_len_bytes) |i| {
         state[i] ^= data[i];
     }
@@ -165,7 +127,9 @@ pub fn permute(state: &mut[u8]) {
     unsafe {
         let fixed = transmute::<&mut [u8], &mut [u64]> (state);
 
+        dump(fixed,"Input of permutation");
         permute_on_words(fixed);
+        dump(fixed,"State after permutation");
     }
 }
 
