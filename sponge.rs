@@ -166,20 +166,32 @@ impl SpongeState {
     }
 
     priv fn pad_and_switch_to_squeeze(&mut self) {
+        use std::ptr::set_memory;
+
         debug!(fmt!("Bits in queue: %u %?",self.bits_in_queue, self.data_queue));
         if self.bits_in_queue + 1 == self.rate {
             self.data_queue[self.bits_in_queue/8] |= 1 << (self.bits_in_queue % 8);
             self.absorb_queue();
-            self.data_queue.mut_iter().take_(self.rate/8).advance(|n| {*n = 0; true});
+
+            do self.data_queue.as_mut_buf |buf, _| {
+                unsafe {
+                    set_memory(buf, 0u8, self.rate);
+                }
+            }
         } else {
             debug!(fmt!("(self.bits_in_queue + 7)/8: %u | self.rate/8 - (self.bits_in_queue + 7)/8: %u ",
                 (self.bits_in_queue + 7)/8, self.rate/8 - (self.bits_in_queue + 7)/8 ));
-            self.data_queue.mut_slice_from((self.bits_in_queue + 7)/8).mut_iter()
-                .take_(self.rate/8 - (self.bits_in_queue + 7)/8 )
-                .advance(|n| {*n = 0; true});
+
+            do self.data_queue.as_mut_buf |buf, _| {
+                unsafe {
+                    set_memory(buf + (self.bits_in_queue + 7)/8,
+                        0u8,
+                        self.rate/8 - (self.bits_in_queue + 7)/8);
+                }
+            }
             self.data_queue[self.bits_in_queue/8] |= 1 << (self.bits_in_queue % 8);
         }
-        self.data_queue[(self.rate-1)/8] |= 1 << ((self.rate-1) % 8);
+        self.data_queue[(self.rate-1)/8] |= 1 << ((self.rate-1) % 8) - 7;
         self.absorb_queue();
 
         debug!("--- Switching to squeezing phase ---");

@@ -3,7 +3,6 @@ use std::uint::range;
 
 priv static NR_LANES: uint = 25;
 
-
 macro_rules! index(
     ($x:expr, $y:expr) => (
         ((($x) % 5) + 5 * (($y) % 5))
@@ -15,6 +14,46 @@ macro_rules! ROL64(
         (if $offset != 0 {  (($a as u64) << $offset) ^ (($a as u64) >> (64 - $offset) ) } else { $a })
     )
 )
+
+pub fn absorb_576_bits(state: &mut[u8], data: &[u8]) {
+    permute_after_xor(state, data, 72);
+}
+
+pub fn absorb_832_bits(state: &mut[u8], data: &[u8]) {
+    permute_after_xor(state, data, 104);
+}
+
+pub fn absorb_1024_bits(state: &mut[u8], data: &[u8]) {
+    permute_after_xor(state, data, 128);
+}
+
+pub fn absorb_1088_bits(state: &mut[u8], data: &[u8]) {
+    permute_after_xor(state, data, 136);
+}
+
+pub fn absorb_1152_bits(state: &mut[u8], data: &[u8]) {
+    permute_after_xor(state, data, 144);
+}
+
+pub fn absorb_1344_bits(state: &mut[u8], data: &[u8]) {
+    permute_after_xor(state, data, 168);
+}
+
+pub fn absorb(state: &mut[u8], data: &[u8], lane_count: uint) {
+    permute_after_xor(state, data, lane_count * 8);
+}
+
+pub fn extract_1024_bits(state: &[u8], data: &mut[u8]) {
+    use std::vec::raw::copy_memory;
+
+    unsafe { copy_memory(data, state, 128); }
+}
+
+pub fn extract(state: &[u8], data: &mut[u8], lane_count: uint) {
+    use std::vec::raw::copy_memory;
+
+    unsafe { copy_memory(data, state, lane_count * 8); }
+}
 
 priv fn theta( A: &mut [u64]) {
     let c = &mut [0u64, ..5];
@@ -108,12 +147,12 @@ priv fn permute_on_words(state: &mut[u64]) {
         dump(state, "After Chi");
 
         iota(state,i);
-        dump(state, "Output After Iota");
+        dump(state, "After Iota");
 
     }
 }
 
-pub fn permute_after_xor(state: &mut[u8], data: &[u8], data_len_bytes: uint) {
+priv fn permute_after_xor(state: &mut[u8], data: &[u8], data_len_bytes: uint) {
     for range(0, data_len_bytes) |i| {
         state[i] ^= data[i];
     }
@@ -131,48 +170,4 @@ pub fn permute(state: &mut[u8]) {
         permute_on_words(fixed);
         dump(fixed,"State after permutation");
     }
-}
-
-pub fn new_state() -> ~[u8] {
-    ~[0u8, ..PERM_SIZE_IN_BYTES]
-}
-
-pub fn absorb_576_bits(state: &mut[u8], data: &[u8]) {
-    permute_after_xor(state, data, 72);
-}
-
-pub fn absorb_832_bits(state: &mut[u8], data: &[u8]) {
-    permute_after_xor(state, data, 104);
-}
-
-pub fn absorb_1024_bits(state: &mut[u8], data: &[u8]) {
-    permute_after_xor(state, data, 128);
-}
-
-pub fn absorb_1088_bits(state: &mut[u8], data: &[u8]) {
-    permute_after_xor(state, data, 136);
-}
-
-pub fn absorb_1152_bits(state: &mut[u8], data: &[u8]) {
-    permute_after_xor(state, data, 144);
-}
-
-pub fn absorb_1344_bits(state: &mut[u8], data: &[u8]) {
-    permute_after_xor(state, data, 168);
-}
-
-pub fn absorb(state: &mut[u8], data: &[u8], lane_count: uint) {
-    permute_after_xor(state, data, lane_count * 8);
-}
-
-pub fn extract_1024_bits(state: &[u8], data: &mut[u8]) {
-    use std::vec::raw::copy_memory;
-
-    unsafe { copy_memory(data, state, 128); }
-}
-
-pub fn extract(state: &[u8], data: &mut[u8], lane_count: uint) {
-    use std::vec::raw::copy_memory;
-
-    unsafe { copy_memory(data, state, lane_count * 8); }
 }
