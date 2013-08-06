@@ -24,7 +24,7 @@ impl ValDisplayer {
         if level <= self.display_level {
             self.writer.write_line(text);
 
-            for bytes.iter().advance |&byte| {
+            for &byte in bytes.iter() {
                 self.writer.write_str(fmt!("%02X ", byte as uint));
             }
 
@@ -35,12 +35,12 @@ impl ValDisplayer {
 
     pub fn display_bits(&self, level: i32, text: &str, data: &[u8], msb_fist: bool) {
         if level <= self.display_level {
-            let mut i_byte = 0;
-            let mut i_bit = 0;
+            let mut i_byte;
+            let mut i_bit;
 
             self.writer.write_line(text);
 
-            for data.iter().enumerate().advance |(i, _)| {
+            for (i, _) in data.iter().enumerate() {
                 i_byte = i / 8;
                 i_bit = i % 8;
 
@@ -66,8 +66,7 @@ impl ValDisplayer {
         if level <= self.display_level {
             self.writer.write_line(text);
 
-            let mut c = Counter::new(0,1).take_(PERM_SIZE/64);
-            for c.advance |i| {
+            for i in range(0, PERM_SIZE/64) {
                 self.writer.write_str(fmt!("%08X:%08X", state[2 *  i] as uint, state[2 * i + 1] as uint));
 
                 if i % 5 == 4 {
@@ -84,8 +83,8 @@ impl ValDisplayer {
 
         if level <= self.display_level {
             self.writer.write_line(text);
-            let mut c = Counter::new(0,1).take_(PERM_SIZE/64);
-            for c.advance |i| {
+
+            for i in range(0, PERM_SIZE/64) {
                 self.writer.write_str(fmt!("%16X", state[i] as uint));
 
                 if i % 5 == 4 {

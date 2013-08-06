@@ -1,5 +1,4 @@
 use consts::*;
-use std::uint::range;
 use reference;
 
 #[packed]
@@ -66,7 +65,7 @@ impl SpongeState {
                 unsafe {
                     match self.rate {
                         576 => {
-                            for range(0, whole_blocks) |_| {
+                            for _ in range(0, whole_blocks) {
                                 do buf_as_slice(cur_data, 576/8) |buf| {
                                     debug!(fmt!("Block to be absorbed: %?", buf));
                                     reference::absorb_576_bits(self.state, buf);
@@ -75,7 +74,7 @@ impl SpongeState {
                             }
                         }
                         832 => {
-                            for range(0, whole_blocks) |_| {
+                            for _ in range(0, whole_blocks) {
                                 do buf_as_slice(cur_data, 832/8) |buf| {
                                     debug!(fmt!("Block to be absorbed: %?", buf));
                                     reference::absorb_832_bits(self.state, buf);
@@ -84,7 +83,7 @@ impl SpongeState {
                             }
                         }
                         1024 => {
-                            for range(0, whole_blocks) |_| {
+                            for _ in range(0, whole_blocks) {
                                 do buf_as_slice(cur_data, 1024/8) |buf| {
                                     debug!(fmt!("Block to be absorbed: %?", buf));
                                     reference::absorb_1024_bits(self.state, buf);
@@ -93,7 +92,7 @@ impl SpongeState {
                             }
                         }
                         1088 => {
-                            for range(0, whole_blocks) |_| {
+                            for _ in range(0, whole_blocks) {
                                 do buf_as_slice(cur_data, 1088/8) |buf| {
                                     debug!(fmt!("Block to be absorbed: %?", buf));
                                     reference::absorb_1088_bits(self.state, buf);
@@ -102,7 +101,7 @@ impl SpongeState {
                             }
                         }
                         1152 => {
-                            for range(0, whole_blocks) |_| {
+                            for _ in range(0, whole_blocks) {
                                 do buf_as_slice(cur_data, 1152/8) |buf| {
                                     debug!(fmt!("Block to be absorbed: %?", buf));
                                     reference::absorb_1152_bits(self.state, buf);
@@ -111,7 +110,7 @@ impl SpongeState {
                             }
                         }
                         1344 => {
-                            for range(0, whole_blocks) |_| {
+                            for _ in range(0, whole_blocks) {
                                 do buf_as_slice(cur_data, 1344/8) |buf| {
                                     debug!(fmt!("Block to be absorbed: %?", buf));
                                     reference::absorb_1344_bits(self.state, buf);
@@ -120,7 +119,7 @@ impl SpongeState {
                             }
                         }
                         n => {
-                            for range(0, whole_blocks) |_| {
+                            for _ in range(0, whole_blocks) {
                                 do buf_as_slice(cur_data, n/8) |buf| {
                                     debug!(fmt!("Block to be absorbed: %?", buf));
                                     reference::absorb(self.state, buf, self.rate / 64);
@@ -175,7 +174,7 @@ impl SpongeState {
 
             do self.data_queue.as_mut_buf |buf, _| {
                 unsafe {
-                    set_memory(buf, 0u8, self.rate);
+                    set_memory(buf, 0u8, self.rate / 8);
                 }
             }
         } else {
@@ -191,7 +190,7 @@ impl SpongeState {
             }
             self.data_queue[self.bits_in_queue/8] |= 1 << (self.bits_in_queue % 8);
         }
-        self.data_queue[(self.rate-1)/8] |= 1 << ((self.rate-1) % 8) - 7;
+        self.data_queue[(self.rate-1)/8] |= 1 << ((self.rate-1) % 8);
         self.absorb_queue();
 
         debug!("--- Switching to squeezing phase ---");
@@ -239,7 +238,7 @@ impl SpongeState {
             }
 
             part_block = self.bits_for_squeezing;
-            if part_block > out_len - 1 {
+            if part_block > out_len - i {
                 part_block = out_len - i;
             }
 

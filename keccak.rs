@@ -18,6 +18,7 @@ fn main() {
     let sizes = [224u, 256, 384, 512];
 
     let in_str = [0x0u8, ..400];
+    let in_str = "The quick brown fox jumps over the lazy dog".as_bytes();
 
     let mut len = 0;
     "00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 "
@@ -25,7 +26,7 @@ fn main() {
 
     printfln!("len = %u", len);
 
-    for sizes.iter().take_(1).advance |&n| {
+    for &n in sizes.iter().take_(1) {
         let mut hasher = Keccak::new(n);
 
         debug!(fmt!("Input bytes = %?", in_str));
@@ -33,7 +34,7 @@ fn main() {
         hasher.input(in_str);
         let mut res = vec::from_elem(n / 8, 0u8);
         hasher.result(res);
-        for res.iter().advance |&b| {
+        for &b in res.iter() {
             printf!("%x", b as uint);
         }
         println("");

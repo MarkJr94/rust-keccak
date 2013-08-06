@@ -1,5 +1,4 @@
 use consts::*;
-use std::uint::range;
 
 priv static NR_LANES: uint = 25;
 
@@ -59,26 +58,26 @@ priv fn theta( A: &mut [u64]) {
     let c = &mut [0u64, ..5];
     let d = &mut [0u64, ..5];
 
-    for range(0,5) |x| {
-        for range(0, 5) |y| {
+    for x in range(0, 5) {
+        for y in range(0, 5) {
             c[x] ^= A[index!(x, y)];
         }
     }
 
-    for range(0, 5) |x| {
+    for x in range(0, 5) {
         d[x] = ROL64!( c[ (x + 1) % 5], 1 ) ^ c[(x + 4) % 5];
     }
 
-    for range(0,5) |x| {
-        for range(0, 5) |y| {
+    for x in range(0,5) {
+        for y in range(0, 5) {
             A[index!(x, y)] ^= d[x];
         }
     }
 }
 
 priv fn rho(A: &mut [u64]) {
-    for range(0, 5) |x| {
-        for range(0, 5) |y| {
+    for x in range(0, 5) {
+        for y in range(0, 5) {
             A[index!(x, y)] = ROL64!(A[index!(x, y)], RHO_OFFSETS[index!(x, y)]);
         }
     }
@@ -87,14 +86,14 @@ priv fn rho(A: &mut [u64]) {
 priv fn pi(A: &mut [u64]) {
     let tempA = &mut [0u64, ..25];
 
-    for range(0, 5) |x| {
-        for range(0, 5) |y| {
+    for x in range(0, 5) {
+        for y in range(0, 5) {
             tempA[index!(x, y)] = A[index!(x, y)];
         }
     }
 
-    for range(0, 5) |x| {
-        for range(0, 5) |y| {
+    for x in range(0, 5) {
+        for y in range(0, 5) {
             A[index!(0 * x + 1 * y, 2 * x + 3 * y)] = tempA[index!(x, y)];
         }
     }
@@ -103,12 +102,12 @@ priv fn pi(A: &mut [u64]) {
 priv fn chi(A: &mut [u64]) {
     let c = &mut [0u64, ..5];
 
-    for range(0, 5) |y| {
-        for range(0, 5) |x| {
+    for y in range(0, 5) {
+        for x in range(0, 5) {
             c[x] = A[index!(x, y)] ^ ((!A[index!(x + 1, y)]) & A[index!(x + 2, y)]);
         }
 
-        for range(0, 5) |x| {
+        for x in range(0, 5) {
             A[index!(x, y)] = c[x];
         }
     }
@@ -120,7 +119,7 @@ priv fn iota(A: &mut [u64], index_round: uint) {
 
 priv fn dump(state: &mut[u64], msg: &str) {
     printfln!("%s: [",msg);
-    for range(0,25) |x| {
+    for x in range(0,25) {
         printf!("%016X ", state[x] as uint);
         if x % 5 == 4 {
             println("")
@@ -131,7 +130,7 @@ priv fn dump(state: &mut[u64], msg: &str) {
 
 priv fn permute_on_words(state: &mut[u64]) {
 
-    for range(0, ROUND_N) |i| {
+    for i in range(0, ROUND_N) {
         printfln!("--- Round %u ---", i);
 
         theta(state);
@@ -153,7 +152,7 @@ priv fn permute_on_words(state: &mut[u64]) {
 }
 
 priv fn permute_after_xor(state: &mut[u8], data: &[u8], data_len_bytes: uint) {
-    for range(0, data_len_bytes) |i| {
+    for i in range(0, data_len_bytes) {
         state[i] ^= data[i];
     }
 
@@ -165,6 +164,7 @@ pub fn permute(state: &mut[u8]) {
 
     unsafe {
         let fixed = transmute::<&mut [u8], &mut [u64]> (state);
+        printfln!("fixed.len() = %u \t state.len() = %u", fixed.len(), state.len());
 
         dump(fixed,"Input of permutation");
         permute_on_words(fixed);

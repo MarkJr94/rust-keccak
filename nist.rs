@@ -88,14 +88,14 @@ mod test {
         let mut msg: ~[u8] = ~[];
         let mut md_ref: ~[u8] = ~[];
 
-        for sizes.iter().advance |&size| {
+        for &size in sizes.iter() {
             let fname = fmt!("ShortMsgKAT_%u.txt", size);
             let r = match io::file_reader(&PosixPath(fname)) {
                 Ok(reader) => reader,
                 Err(msg) => fail!(msg)
             };
 
-            for r.each_line |line| {
+            do /*line in */r.each_line |line| {
                 let fixed = line.trim();
 
                 if line.starts_with("Len") {
@@ -110,7 +110,12 @@ mod test {
                             u8::from_str_radix(s, 16).get()
                         })
                         .collect();
-                } else if line.starts_with("MD") {
+                } else if line.starts_with("MD") && len % 8 == 0 && len != 0 {
+                    printf!("Displaying test message:\t");
+                    for &c in msg.iter() {
+                        printf!("%01X", c as uint);
+                    }
+                    printfln!("");
                     md_ref = line.split_iter(' ').collect::<~[&str]>()[2].iter()
                         .transform(|c| {
                             let s = str::from_char(c);
@@ -127,7 +132,8 @@ mod test {
 
                     assert!(md_ref == res, fmt!("Error: Reference %? does not match result %?", md_ref, res));
                 }
-            }
+                true
+            };
         }
     }
 }
