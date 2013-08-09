@@ -3,42 +3,56 @@ extern mod extra;
 use extra::digest::*;
 
 pub mod consts;
-pub mod display;
 pub mod reference;
 pub mod nist;
 pub mod sponge;
 
 fn main() {
-    use extra::digest::*;
     use nist::*;
     use std::io;
-    use std::path::PosixPath;
     use std::vec;
+    use std::uint;
 
     let sizes = [224u, 256, 384, 512];
 
-    let in_str = [0x0u8, ..400];
-    let in_str = "The quick brown fox jumps over the lazy dog".as_bytes();
+    let inp = io::stdin();
+    let mut size;
 
-    let mut len = 0;
-    "00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 "
-    .word_iter().advance(|_| {len += 1; true});
+    loop {
+        print("Choose hash size from [224, 256, 384, 512]: ");
+        let in_str = inp.read_line();
 
-    printfln!("len = %u", len);
+        if in_str.len() == 0 {
+            break;
+        }
 
-    for &n in sizes.iter().take_(1) {
-        let mut hasher = Keccak::new(n);
+        match uint::from_str(in_str) {
+            Some(n) => { size = n; }
+            None => { loop; }
+        }
 
-        debug!(fmt!("Input bytes = %?", in_str));
-        printfln!("Testing size %u:", n)
-        hasher.input(in_str);
-        let mut res = vec::from_elem(n / 8, 0u8);
-        hasher.result(res);
+        if !sizes.contains(&size) {
+            loop;
+        }
+
+        let mut kc = Keccak::new(size);
+        let mut res = vec::from_elem(size / 8, 0u8);
+
+        print("Give input string to be hashed: ");
+
+        let in_str = inp.read_line();
+
+        let data = in_str.as_bytes();
+
+        debug!("User input as bytes: %?", data);
+
+        kc.input(data);
+        kc.result(res);
+
+        print("Hash: 0x");
         for &b in res.iter() {
-            printf!("%x", b as uint);
+            printf!("%02x", b as uint);
         }
         println("");
-
-        return;
     }
 }

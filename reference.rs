@@ -118,20 +118,13 @@ priv fn iota(A: &mut [u64], index_round: uint) {
 }
 
 priv fn dump(state: &mut[u64], msg: &str) {
-    printfln!("%s: [",msg);
-    for x in range(0,25) {
-        printf!("%016X ", state[x] as uint);
-        if x % 5 == 4 {
-            println("")
-        }
-    }
-    println("]");
+    debug!("%s: %?", msg, state);
 }
 
 priv fn permute_on_words(state: &mut[u64]) {
 
     for i in range(0, ROUND_N) {
-        printfln!("--- Round %u ---", i);
+        debug!("--- Round %u ---", i);
 
         theta(state);
         dump(state, "After Theta");
@@ -164,7 +157,7 @@ pub fn permute(state: &mut[u8]) {
 
     unsafe {
         let fixed = transmute::<&mut [u8], &mut [u64]> (state);
-        printfln!("fixed.len() = %u \t state.len() = %u", fixed.len(), state.len());
+        debug!("fixed.len() = %u \t state.len() = %u", fixed.len(), state.len());
 
         dump(fixed,"Input of permutation");
         permute_on_words(fixed);

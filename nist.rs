@@ -48,20 +48,21 @@ impl Digest for Keccak {
     }
 
     pub fn result(&mut self, out: &mut [u8]) {
-//         assert!(out.len() >= self.hash_size);
-
         self.sponge_state.squeeze(out, self.sponge_state.fixed_out_len);
     }
 
     pub fn reset(&mut self) {
-        self.sponge_state = match self.hash_size {
-            0 => SpongeState::new(1024, 576),
-            224 => SpongeState::new(1152, 448),
-            256 => SpongeState::new(1088, 512),
-            384 => SpongeState::new(832, 768),
-            512 => SpongeState::new(576, 1024),
-            _ => fail!("hash_size must be 0, 224, 256, 384, or 512")
+        for x in self.sponge_state.state.mut_iter() {
+            *x = 0u8;
         }
+
+        for x in self.sponge_state.data_queue.mut_iter() {
+            *x = 0u8;
+        }
+
+        self.sponge_state.bits_in_queue = 0;
+        self.sponge_state.squeezing = false;
+        self.sponge_state.bits_for_squeezing = 0;
     }
 
     pub fn output_bits(&self) -> uint {
@@ -82,6 +83,7 @@ mod test {
         use std::uint;
         use std::vec;
         use std::str;
+        use std::cast::transmute;
 
         let sizes = [224u, 256, 384, 512];
         let mut len: uint = 0;
@@ -95,40 +97,57 @@ mod test {
                 Err(msg) => fail!(msg)
             };
 
-            do /*line in */r.each_line |line| {
+            do r.each_line |line| {
                 let fixed = line.trim();
 
                 if line.starts_with("Len") {
                     let s = line.split_iter(' ').collect::<~[&str]>()[2];
-                    println(s);
-                    len = uint::from_str(s).get();
+                    len = uint::from_str(s).unwrap();
                 } else if line.starts_with("Msg") {
-                    msg = line.split_iter(' ').collect::<~[&str]>()[2].iter()
-                        .transform(|c| {
-                            let s = str::from_char(c);
-                            println(s);
-                            u8::from_str_radix(s, 16).get()
+                    let tmp = line.split_iter(' ').collect::<~[&str]>()[2]
+                        .iter()
+                        .collect::<~[char]>();
+
+                    msg =  tmp
+                        .chunk_iter(2)
+                        .transform(|cs| {
+                            let s = str::from_chars(cs);
+                            u8::from_str_radix(s, 16).unwrap()
                         })
                         .collect();
                 } else if line.starts_with("MD") && len % 8 == 0 && len != 0 {
-                    printf!("Displaying test message:\t");
-                    for &c in msg.iter() {
-                        printf!("%01X", c as uint);
-                    }
-                    printfln!("");
-                    md_ref = line.split_iter(' ').collect::<~[&str]>()[2].iter()
-                        .transform(|c| {
-                            let s = str::from_char(c);
-                            println(s);
-                            u8::from_str_radix(s, 16).get()
+
+                    let tmp = line.split_iter(' ')
+                        .transform(|s| s.to_owned())
+                        .collect::<~[~str]>()[2];
+
+
+                    let tmp2 = tmp.iter()
+                        .collect::<~[char]>();
+
+                    md_ref = tmp2
+                        .chunk_iter(2)
+                        .transform(|cs| {
+                            let s = str::from_chars(cs);
+                            u8::from_str_radix(s, 16).unwrap()
                         })
                         .collect();
 
                     let mut kc = Keccak::new(size);
-                    let mut res = vec::from_elem(size, 0u8);
+                    let mut res = vec::from_elem(size / 8, 0u8);
+
+                    debug!("Len = %u", md_ref.len());
+                    debug!("Msg = %?",
+                        unsafe { transmute::<&[u8],&[u64]>(msg.as_slice()) });
+                    debug!("Reference hash =  %?",
+                        unsafe { transmute::<&[u8],&[u64]>(md_ref.as_slice()) });
+
 
                     kc.input(msg);
                     kc.result(res);
+
+                    debug!("Result hash =  %?",
+                        unsafe { transmute::<&[u8],&[u64]>(res.as_slice()) });
 
                     assert!(md_ref == res, fmt!("Error: Reference %? does not match result %?", md_ref, res));
                 }

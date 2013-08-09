@@ -24,7 +24,7 @@ impl SpongeState {
         assert!(rate + capacity == 1600);
         assert!(rate % 64 == 0);
 
-        debug!(fmt!("Rate = %u", rate));
+        debug!("Rate = %u", rate);
 
         SpongeState {
             state: [0u8, ..PERM_SIZE_IN_BYTES],
@@ -56,7 +56,7 @@ impl SpongeState {
         let mut i = 0u;
 
         while i < data_bit_len {
-            debug!(fmt!("data_bit_len = %u : self.rate = %u", data_bit_len, self.rate));
+            debug!("data_bit_len = %u : self.rate = %u", data_bit_len, self.rate);
             if (self.bits_in_queue == 0) && (data_bit_len >= self.rate)
                 && (i <=  (data_bit_len - self.rate)) {
                 whole_blocks = (data_bit_len - i) / self.rate;
@@ -67,7 +67,7 @@ impl SpongeState {
                         576 => {
                             for _ in range(0, whole_blocks) {
                                 do buf_as_slice(cur_data, 576/8) |buf| {
-                                    debug!(fmt!("Block to be absorbed: %?", buf));
+                                    debug!("Block to be absorbed: %?", buf);
                                     reference::absorb_576_bits(self.state, buf);
                                 }
                                 cur_data = cur_data + 576/8;
@@ -76,7 +76,7 @@ impl SpongeState {
                         832 => {
                             for _ in range(0, whole_blocks) {
                                 do buf_as_slice(cur_data, 832/8) |buf| {
-                                    debug!(fmt!("Block to be absorbed: %?", buf));
+                                    debug!("Block to be absorbed: %?", buf);
                                     reference::absorb_832_bits(self.state, buf);
                                 }
                                 cur_data = cur_data + 832/8;
@@ -85,7 +85,7 @@ impl SpongeState {
                         1024 => {
                             for _ in range(0, whole_blocks) {
                                 do buf_as_slice(cur_data, 1024/8) |buf| {
-                                    debug!(fmt!("Block to be absorbed: %?", buf));
+                                    debug!("Block to be absorbed: %?", buf);
                                     reference::absorb_1024_bits(self.state, buf);
                                 }
                                 cur_data = cur_data + 1024/8;
@@ -94,7 +94,7 @@ impl SpongeState {
                         1088 => {
                             for _ in range(0, whole_blocks) {
                                 do buf_as_slice(cur_data, 1088/8) |buf| {
-                                    debug!(fmt!("Block to be absorbed: %?", buf));
+                                    debug!("Block to be absorbed: %?", buf);
                                     reference::absorb_1088_bits(self.state, buf);
                                 }
                                 cur_data = cur_data + 1088/8;
@@ -103,7 +103,7 @@ impl SpongeState {
                         1152 => {
                             for _ in range(0, whole_blocks) {
                                 do buf_as_slice(cur_data, 1152/8) |buf| {
-                                    debug!(fmt!("Block to be absorbed: %?", buf));
+                                    debug!("Block to be absorbed: %?", buf);
                                     reference::absorb_1152_bits(self.state, buf);
                                 }
                                 cur_data = cur_data + 1152/8;
@@ -112,7 +112,7 @@ impl SpongeState {
                         1344 => {
                             for _ in range(0, whole_blocks) {
                                 do buf_as_slice(cur_data, 1344/8) |buf| {
-                                    debug!(fmt!("Block to be absorbed: %?", buf));
+                                    debug!("Block to be absorbed: %?", buf);
                                     reference::absorb_1344_bits(self.state, buf);
                                 }
                                 cur_data = cur_data + 1344/8;
@@ -121,7 +121,7 @@ impl SpongeState {
                         n => {
                             for _ in range(0, whole_blocks) {
                                 do buf_as_slice(cur_data, n/8) |buf| {
-                                    debug!(fmt!("Block to be absorbed: %?", buf));
+                                    debug!("Block to be absorbed: %?", buf);
                                     reference::absorb(self.state, buf, self.rate / 64);
                                 }
                                 cur_data = cur_data + self.rate/8;
@@ -158,7 +158,7 @@ impl SpongeState {
                 }
             }
 
-            debug!(fmt!("i = %u",i));
+            debug!("(At the end of loop iteration) i = %u",i);
         }
 
         Success
@@ -167,7 +167,7 @@ impl SpongeState {
     priv fn pad_and_switch_to_squeeze(&mut self) {
         use std::ptr::set_memory;
 
-        debug!(fmt!("Bits in queue: %u %?",self.bits_in_queue, self.data_queue));
+        debug!("Bits in queue: %u %?",self.bits_in_queue, self.data_queue);
         if self.bits_in_queue + 1 == self.rate {
             self.data_queue[self.bits_in_queue/8] |= 1 << (self.bits_in_queue % 8);
             self.absorb_queue();
@@ -178,8 +178,8 @@ impl SpongeState {
                 }
             }
         } else {
-            debug!(fmt!("(self.bits_in_queue + 7)/8: %u | self.rate/8 - (self.bits_in_queue + 7)/8: %u ",
-                (self.bits_in_queue + 7)/8, self.rate/8 - (self.bits_in_queue + 7)/8 ));
+            debug!("(self.bits_in_queue + 7)/8: %u | self.rate/8 - (self.bits_in_queue + 7)/8: %u ",
+                (self.bits_in_queue + 7)/8, self.rate/8 - (self.bits_in_queue + 7)/8 );
 
             do self.data_queue.as_mut_buf |buf, _| {
                 unsafe {
@@ -205,7 +205,7 @@ impl SpongeState {
             self.bits_for_squeezing = self.rate;
         }
 
-        debug!(fmt!("Block available for squeezing: %?", self.data_queue.slice_to(self.bits_for_squeezing / 8)));
+        debug!("Block available for squeezing: %?", self.data_queue.slice_to(self.bits_for_squeezing / 8));
         self.squeezing = true;
     }
 
@@ -215,6 +215,7 @@ impl SpongeState {
         if !self.squeezing {
             self.pad_and_switch_to_squeeze();
         }
+
         if out_len % 8 != 0 {
             return Failure;
         }
@@ -234,7 +235,8 @@ impl SpongeState {
                     self.bits_for_squeezing = self.rate;
                 }
 
-                debug!(fmt!("Blocks available for squeezing: %?", self.data_queue.slice_to(self.bits_for_squeezing / 8)));
+                debug!("Blocks available for squeezing: %?",
+                    self.data_queue.slice_to(self.bits_for_squeezing / 8));
             }
 
             part_block = self.bits_for_squeezing;
@@ -256,7 +258,7 @@ impl SpongeState {
 
     priv fn absorb_queue(&mut self) {
         debug!("Absorbing Queue");
-        debug!(fmt!("Block to be absorbed: %?", self.data_queue.slice_to(self.rate/8)));
+        debug!("Block to be absorbed: %?", self.data_queue.slice_to(self.rate/8));
         match self.rate {
             576 => reference::absorb_576_bits(self.state, self.data_queue),
             832 => reference::absorb_832_bits(self.state, self.data_queue),
@@ -268,5 +270,38 @@ impl SpongeState {
         }
 
         self.bits_in_queue = 0;
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    static TEST_OUT: [u64, ..25] = [
+        0xF1258F7940E1DDE7, 0x84D5CCF933C0478A,
+        0xD598261EA65AA9EE, 0xBD1547306F80494D,
+        0x8B284E056253D057, 0xFF97A42D7F8E6FD4,
+        0x90FEE5A0A44647C4, 0x8C5BDA0CD6192E76,
+        0xAD30A6F71B19059C, 0x30935AB7D08FFC64,
+        0xEB5AA93F2317D635, 0xA9A6E6260D712103,
+        0x81A57C16DBCF555F, 0x43B831CD0347C826,
+        0x01F22F1A11A5569F, 0x05E5635A21D9AE61,
+        0x64BEFEF28CC970F2, 0x613670957BC46611,
+        0xB87C5A554FD00ECB, 0x8C3EE88A1CCF32C8,
+        0x940C7922AE3A2614, 0x1841F924A2C509E4,
+        0x16F53526E70465C2, 0x75F644E97F30A13B,
+        0xEAF1FF7B5CECA249
+    ];
+
+    fn test_sponge() {
+        use std::cast::transmute;
+        let mut sp = SpongeState::new(1152, 448);
+
+        let test_in = [0u8, ..144];
+
+        sp.absorb(test_in, 1152);
+
+        unsafe {
+            assert_eq!(transmute::<&mut [u8], &[u64]>(sp.state), TEST_OUT);
+        }
     }
 }
