@@ -95,7 +95,7 @@ mod test {
                 let mut msg: ~[u8] = ~[];
                 let mut md_ref: ~[u8] = ~[];
 
-                let fname = fmt!("ShortMsgKAT_%u.txt", size);
+                let fname = fmt!("test_vectors/ShortMsgKAT_%u.txt", size);
                 let r = match io::file_reader(&PosixPath(fname)) {
                     Ok(reader) => reader,
                     Err(msg) => fail!(msg)

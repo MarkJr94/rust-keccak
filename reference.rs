@@ -173,7 +173,8 @@ fn test_permutation() {
 
     let mut state = vec::from_elem(25, 0u64);
 
-    let r = match io::file_reader(&PosixPath("KeccakPermutationIntermediateValues.txt")) {
+    let r = match io::file_reader(
+            &PosixPath("test_vectors/KeccakPermutationIntermediateValues.txt")) {
         Ok(reader) => { reader }
         Err(msg) => { fail!(msg) }
     };
