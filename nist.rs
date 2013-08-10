@@ -75,7 +75,7 @@ mod test {
     use super::*;
 
     #[test]
-    fn test_hashing() {
+    fn test_hashing_short() {
         use extra::digest::*;
         use std::io;
         use std::path::PosixPath;
@@ -96,6 +96,91 @@ mod test {
                 let mut md_ref: ~[u8] = ~[];
 
                 let fname = fmt!("test_vectors/ShortMsgKAT_%u.txt", size);
+                let r = match io::file_reader(&PosixPath(fname)) {
+                    Ok(reader) => reader,
+                    Err(msg) => fail!(msg)
+                };
+
+                do r.each_line |line| {
+                    if line.starts_with("Len") {
+                        let s = line.split_iter(' ').collect::<~[&str]>()[2];
+                        len = uint::from_str(s).unwrap();
+                    } else if line.starts_with("Msg") {
+                        let tmp = line.split_iter(' ').collect::<~[&str]>()[2]
+                            .iter()
+                            .collect::<~[char]>();
+
+                        msg =  tmp
+                            .chunk_iter(2)
+                            .transform(|cs| {
+                                let s = str::from_chars(cs);
+                                u8::from_str_radix(s, 16).unwrap()
+                            })
+                            .collect();
+                    } else if line.starts_with("MD") && len % 8 == 0 && len != 0 {
+
+                        let tmp = line.split_iter(' ')
+                            .transform(|s| s.to_owned())
+                            .collect::<~[~str]>()[2];
+
+
+                        let tmp2 = tmp.iter()
+                            .collect::<~[char]>();
+
+                        md_ref = tmp2
+                            .chunk_iter(2)
+                            .transform(|cs| {
+                                let s = str::from_chars(cs);
+                                u8::from_str_radix(s, 16).unwrap()
+                            })
+                            .collect();
+
+                        let mut kc = Keccak::new(size);
+                        let mut res = vec::from_elem(size / 8, 0u8);
+
+                        debug!("Len = %u", md_ref.len());
+                        debug!("Msg = %?",
+                            unsafe { transmute::<&[u8],&[u64]>(msg.as_slice()) });
+                        debug!("Reference hash =  %?",
+                            unsafe { transmute::<&[u8],&[u64]>(md_ref.as_slice()) });
+
+
+                        kc.input(msg);
+                        kc.result(res);
+
+                        debug!("Result hash =  %?",
+                            unsafe { transmute::<&[u8],&[u64]>(res.as_slice()) });
+
+                        assert!(md_ref == res, fmt!("Error: Reference %? does not match result %?", md_ref, res));
+                    }
+                    true
+                };
+            }
+        }
+    }
+
+    #[test]
+    fn test_hashing_long() {
+        use extra::digest::*;
+        use std::io;
+        use std::path::PosixPath;
+        use std::u8;
+        use std::uint;
+        use std::vec;
+        use std::str;
+        use std::cast::transmute;
+
+        let sizes = [0u, 224, 256, 384, 512];
+
+        for &size in sizes.iter() {
+
+            do spawn {
+
+                let mut len: uint = 0;
+                let mut msg: ~[u8] = ~[];
+                let mut md_ref: ~[u8] = ~[];
+
+                let fname = fmt!("test_vectors/LongMsgKAT_%u.txt", size);
                 let r = match io::file_reader(&PosixPath(fname)) {
                     Ok(reader) => reader,
                     Err(msg) => fail!(msg)
