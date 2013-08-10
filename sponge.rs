@@ -292,6 +292,7 @@ mod test {
         0xEAF1FF7B5CECA249
     ];
 
+    #[test]
     fn test_sponge() {
         use std::cast::transmute;
         let mut sp = SpongeState::new(1152, 448);

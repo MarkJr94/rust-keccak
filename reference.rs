@@ -54,6 +54,19 @@ pub fn extract(state: &[u8], data: &mut[u8], lane_count: uint) {
     unsafe { copy_memory(data, state, lane_count * 8); }
 }
 
+pub fn permute(state: &mut[u8]) {
+    use std::cast::transmute;
+
+    unsafe {
+        let fixed = transmute::<&mut [u8], &mut [u64]> (state);
+        debug!("fixed.len() = %u \t state.len() = %u", fixed.len(), state.len());
+
+        dump(fixed,"Input of permutation");
+        permute_on_words(fixed);
+        dump(fixed,"State after permutation");
+    }
+}
+
 priv fn theta( A: &mut [u64]) {
     let c = &mut [0u64, ..5];
     let d = &mut [0u64, ..5];
@@ -152,15 +165,87 @@ priv fn permute_after_xor(state: &mut[u8], data: &[u8], data_len_bytes: uint) {
     permute(state)
 }
 
-pub fn permute(state: &mut[u8]) {
-    use std::cast::transmute;
+#[test]
+fn test_permutation() {
+    use std::io;
+    use std::path::PosixPath;
+    use std::vec;
 
-    unsafe {
-        let fixed = transmute::<&mut [u8], &mut [u64]> (state);
-        debug!("fixed.len() = %u \t state.len() = %u", fixed.len(), state.len());
+    let mut state = vec::from_elem(25, 0u64);
 
-        dump(fixed,"Input of permutation");
-        permute_on_words(fixed);
-        dump(fixed,"State after permutation");
+    let r = match io::file_reader(&PosixPath("KeccakPermutationIntermediateValues.txt")) {
+        Ok(reader) => { reader }
+        Err(msg) => { fail!(msg) }
+    };
+
+    let mut round_n = -1;
+
+    do r.each_line |line| {
+        let mut ret = true;
+
+        if line.starts_with("E7 DD E1 40") {
+            ret = false;
+        }
+
+        if line.starts_with("--- Round") {
+            round_n += 1;
+
+            info!(line);
+            r.read_line();
+
+            let rtheta = r.read_line();
+            assert_eq!(~"After theta:", rtheta);
+            let ref_state = get_state(r);
+            theta(state);
+            assert!(state == ref_state, "State is incorrect after theta");
+
+            let rrho = r.read_line();
+            assert_eq!(~"After rho:", rrho);
+            let ref_state = get_state(r);
+            rho(state);
+            assert!(state == ref_state, "State is incorrect after rho");
+
+            let rpi = r.read_line();
+            assert_eq!(~"After pi:", rpi);
+            let ref_state = get_state(r);
+            pi(state);
+            assert!(state == ref_state, "State is incorrect after pi");
+
+            let rchi = r.read_line();
+            assert_eq!(~"After chi:", rchi);
+            let ref_state = get_state(r);
+            chi(state);
+            assert!(state == ref_state, "State is incorrect after chi");
+
+            let riota = r.read_line();
+            assert_eq!(~"After iota:", riota);
+            let ref_state = get_state(r);
+            iota(state, round_n as uint);
+            assert!(state == ref_state, "State is incorrect after iota");
+
+            ret = true;
+        }
+
+        ret
+    };
+}
+
+#[cfg(test)]
+priv fn get_state(reader: @Reader) -> ~[u64] {
+    use std::u64;
+
+    let mut state = ~[];
+
+    for _ in range(0, 5) {
+        let line = reader.read_line();
+
+        for s in line.split_iter(' ') {
+            match u64::from_str_radix(s, 16) {
+                Some(x) => { state.push(x); }
+                None => { fail!("Error in parsing number"); }
+            }
+        }
     }
+
+    state
 }
