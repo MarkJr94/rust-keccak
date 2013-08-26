@@ -1,6 +1,6 @@
 use consts::*;
 
-priv static NR_LANES: uint = 25;
+static NR_LANES: uint = 25;
 
 macro_rules! index(
     ($x:expr, $y:expr) => (
@@ -67,7 +67,7 @@ pub fn permute(state: &mut[u8]) {
     }
 }
 
-priv fn theta( A: &mut [u64]) {
+fn theta( A: &mut [u64]) {
     let c = &mut [0u64, ..5];
     let d = &mut [0u64, ..5];
 
@@ -88,7 +88,7 @@ priv fn theta( A: &mut [u64]) {
     }
 }
 
-priv fn rho(A: &mut [u64]) {
+fn rho(A: &mut [u64]) {
     for x in range(0, 5) {
         for y in range(0, 5) {
             A[index!(x, y)] = ROL64!(A[index!(x, y)], RHO_OFFSETS[index!(x, y)]);
@@ -96,7 +96,7 @@ priv fn rho(A: &mut [u64]) {
     }
 }
 
-priv fn pi(A: &mut [u64]) {
+fn pi(A: &mut [u64]) {
     let tempA = &mut [0u64, ..25];
 
     for x in range(0, 5) {
@@ -112,7 +112,7 @@ priv fn pi(A: &mut [u64]) {
     }
 }
 
-priv fn chi(A: &mut [u64]) {
+fn chi(A: &mut [u64]) {
     let c = &mut [0u64, ..5];
 
     for y in range(0, 5) {
@@ -126,15 +126,15 @@ priv fn chi(A: &mut [u64]) {
     }
 }
 
-priv fn iota(A: &mut [u64], index_round: uint) {
+fn iota(A: &mut [u64], index_round: uint) {
     A[index!(0, 0)] ^= ROUND_CONST[index_round] as u64;
 }
 
-priv fn dump(state: &mut[u64], msg: &str) {
+fn dump(state: &mut[u64], msg: &str) {
     debug!("%s: %?", msg, state);
 }
 
-priv fn permute_on_words(state: &mut[u64]) {
+fn permute_on_words(state: &mut[u64]) {
 
     for i in range(0, ROUND_N) {
         debug!("--- Round %u ---", i);
@@ -157,7 +157,7 @@ priv fn permute_on_words(state: &mut[u64]) {
     }
 }
 
-priv fn permute_after_xor(state: &mut[u8], data: &[u8], data_len_bytes: uint) {
+fn permute_after_xor(state: &mut[u8], data: &[u8], data_len_bytes: uint) {
     for i in range(0, data_len_bytes) {
         state[i] ^= data[i];
     }
@@ -232,7 +232,7 @@ fn test_permutation() {
 }
 
 #[cfg(test)]
-priv fn get_state(reader: @Reader) -> ~[u64] {
+fn get_state(reader: @Reader) -> ~[u64] {
     use std::u64;
 
     let mut state = ~[];

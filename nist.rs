@@ -28,7 +28,7 @@ impl Keccak {
 }
 
 impl Digest for Keccak {
-    pub fn input(&mut self, input: &[u8]) {
+    fn input(&mut self, input: &[u8]) {
         let data_bit_len = input.len() * 8;
 
         let mut err;
@@ -47,11 +47,11 @@ impl Digest for Keccak {
         }
     }
 
-    pub fn result(&mut self, out: &mut [u8]) {
+    fn result(&mut self, out: &mut [u8]) {
         self.sponge_state.squeeze(out, self.sponge_state.fixed_out_len);
     }
 
-    pub fn reset(&mut self) {
+    fn reset(&mut self) {
         for x in self.sponge_state.state.mut_iter() {
             *x = 0u8;
         }
@@ -65,7 +65,7 @@ impl Digest for Keccak {
         self.sponge_state.bits_for_squeezing = 0;
     }
 
-    pub fn output_bits(&self) -> uint {
+    fn output_bits(&self) -> uint {
         self.hash_size
     }
 }

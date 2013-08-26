@@ -164,7 +164,7 @@ impl SpongeState {
         Success
     }
 
-    priv fn pad_and_switch_to_squeeze(&mut self) {
+    fn pad_and_switch_to_squeeze(&mut self) {
         use std::ptr::set_memory;
 
         debug!("Bits in queue: %u %?",self.bits_in_queue, self.data_queue);
@@ -256,7 +256,7 @@ impl SpongeState {
         Success
     }
 
-    priv fn absorb_queue(&mut self) {
+    fn absorb_queue(&mut self) {
         debug!("Absorbing Queue");
         debug!("Block to be absorbed: %?", self.data_queue.slice_to(self.rate/8));
         match self.rate {
