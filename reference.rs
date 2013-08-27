@@ -67,6 +67,7 @@ pub fn permute(state: &mut[u8]) {
     }
 }
 
+#[inline]
 fn theta( A: &mut [u64]) {
     let c = &mut [0u64, ..5];
     let d = &mut [0u64, ..5];
@@ -88,6 +89,7 @@ fn theta( A: &mut [u64]) {
     }
 }
 
+#[inline]
 fn rho(A: &mut [u64]) {
     for x in range(0, 5) {
         for y in range(0, 5) {
@@ -96,6 +98,7 @@ fn rho(A: &mut [u64]) {
     }
 }
 
+#[inline]
 fn pi(A: &mut [u64]) {
     let tempA = &mut [0u64, ..25];
 
@@ -112,6 +115,7 @@ fn pi(A: &mut [u64]) {
     }
 }
 
+#[inline]
 fn chi(A: &mut [u64]) {
     let c = &mut [0u64, ..5];
 

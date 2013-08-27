@@ -1,5 +1,6 @@
 extern mod extra;
 
+// pub use self::nist::Keccak;
 use extra::digest::*;
 
 pub mod consts;

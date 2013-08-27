@@ -73,6 +73,7 @@ impl Digest for Keccak {
 #[cfg(test)]
 mod test {
     use super::*;
+    use extra::test::BenchHarness;
 
     #[test]
     fn test_hashing_short() {
@@ -112,7 +113,7 @@ mod test {
 
                         msg =  tmp
                             .chunk_iter(2)
-                            .transform(|cs| {
+                            .map(|cs| {
                                 let s = str::from_chars(cs);
                                 u8::from_str_radix(s, 16).unwrap()
                             })
@@ -120,7 +121,7 @@ mod test {
                     } else if line.starts_with("MD") && len % 8 == 0 && len != 0 {
 
                         let tmp = line.split_iter(' ')
-                            .transform(|s| s.to_owned())
+                            .map(|s| s.to_owned())
                             .collect::<~[~str]>()[2];
 
 
@@ -129,7 +130,7 @@ mod test {
 
                         md_ref = tmp2
                             .chunk_iter(2)
-                            .transform(|cs| {
+                            .map(|cs| {
                                 let s = str::from_chars(cs);
                                 u8::from_str_radix(s, 16).unwrap()
                             })
@@ -197,7 +198,7 @@ mod test {
 
                         msg =  tmp
                             .chunk_iter(2)
-                            .transform(|cs| {
+                            .map(|cs| {
                                 let s = str::from_chars(cs);
                                 u8::from_str_radix(s, 16).unwrap()
                             })
@@ -205,7 +206,7 @@ mod test {
                     } else if line.starts_with("MD") && len % 8 == 0 && len != 0 {
 
                         let tmp = line.split_iter(' ')
-                            .transform(|s| s.to_owned())
+                            .map(|s| s.to_owned())
                             .collect::<~[~str]>()[2];
 
 
@@ -214,7 +215,7 @@ mod test {
 
                         md_ref = tmp2
                             .chunk_iter(2)
-                            .transform(|cs| {
+                            .map(|cs| {
                                 let s = str::from_chars(cs);
                                 u8::from_str_radix(s, 16).unwrap()
                             })
@@ -242,5 +243,21 @@ mod test {
                 };
             }
         }
+    }
+
+    #[bench]
+    fn bench_throughput(bh: &mut BenchHarness) {
+        use std::rand::{weak_rng, RngUtil};
+
+        let mut is = weak_rng();
+        let mut kc = Keccak::new(256);
+
+        let data = is.gen_bytes(1024);
+
+        do bh.iter {
+            kc.input(data);
+        }
+
+        bh.bytes = 1024;
     }
 }
